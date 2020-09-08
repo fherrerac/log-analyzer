@@ -26,10 +26,10 @@ this process must be triggered manually by running "ProcessLog.main()". This pro
     Time to process sessions: 0 mins 32 secs
 
             
-Step One) First, each log entry is analyzed and inserted into the "requests" table. Turns out not all log entries are 
+**Step One)** First, each log entry is analyzed and inserted into the "requests" table. Turns out not all log entries are 
 valid user requests (eg. GET /).
 
-Step Two) Second, for each user, his list of requests is analyzed and the table sessions is populated:
+**Step Two)** Second, for each user, his list of requests is analyzed and the table sessions is populated:
 
             List<Request> requests = logAnalyzerDaoMySql.getUserRequests(userId, keepDbConnection);
             for (Request request : requests) {
