@@ -1,9 +1,9 @@
 
-###### OVERVIEW
+#### I. OVERVIEW
 
 The application is divided in two parts:
 
-###### Part 1) Log Processing
+##### **Part 1) Log Processing**
 
 This part consists of processing the log files and isnerting the information into a MySql DB. At this point, 
 this process must be triggered manually by running "ProcessLog.main()". This process is divided in two steps:
@@ -50,7 +50,7 @@ Step Two) Second, for each user, his list of requests is analyzed and the table 
                 }
             }
 
-###### Part 2) Report Creation
+##### **Part 2) Report Creation**
 
 The second part is about creating the report. The logic happens in LogAnalzerService. And for now, this 
 part is exposed via a small Rest API. To build and run the Rest API service:
@@ -108,7 +108,7 @@ You can use the POSTMAN collection to see the above response:
             ]
         }
         
-###### DATABASE
+#### II. DATABASE
 
 There is a MySQL database consisting of two tables:
 
