@@ -1,11 +1,11 @@
 
-#### I. OVERVIEW
+## I. OVERVIEW
 
 The application is divided in two parts:
 
-##### **Part 1) Log Processing**
+### **Part One: Log Processing**
 
-This part consists of processing the log files and isnerting the information into a MySql DB. At this point, 
+This part consists of processing the log files and inserting the information into a MySql DB. At this point, 
 this process must be triggered manually by running "ProcessLog.main()". This process is divided in two steps:
                                                                         
     private void processLogFiles() {
@@ -19,17 +19,21 @@ this process must be triggered manually by running "ProcessLog.main()". This pro
     ...
     Time to process logs: 0 mins 22 secs
 
-    Step One)
+    Step Two)
     Processing sessions for user: 71f28176
     Processing sessions for user: b3a60c78
     ...
     Time to process sessions: 0 mins 32 secs
 
             
-**Step One)** First, each log entry is analyzed and inserted into the "requests" table. Turns out not all log entries are 
+**Step One)** 
+
+Each log entry is analyzed and inserted into the "requests" table. Turns out not all log entries are 
 valid user requests (eg. GET /).
 
-**Step Two)** Second, for each user, his list of requests is analyzed and the table sessions is populated:
+**Step Two)** 
+
+For each user, his list of requests is analyzed and the table sessions is populated:
 
             List<Request> requests = logAnalyzerDaoMySql.getUserRequests(userId, keepDbConnection);
             for (Request request : requests) {
@@ -50,10 +54,10 @@ valid user requests (eg. GET /).
                 }
             }
 
-##### **Part 2) Report Creation**
+### **Part Two: Report Creation**
 
-The second part is about creating the report. The logic happens in LogAnalzerService. And for now, this 
-part is exposed via a small Rest API. To build and run the Rest API service:
+The second part is about creating the report. The logic happens in LogAnalzerService. For now, this 
+part is exposed via a Rest API. To build and run the Rest API service:
 
     mvn clean package
     mvn jetty:run
@@ -108,9 +112,9 @@ You can use the POSTMAN collection to see the above response:
             ]
         }
         
-#### II. DATABASE
+## **II. Database**
 
-There is a MySQL database consisting of two tables:
+The database is in MySQL and consists of two tables:
 
     CREATE TABLE `requests` (
       `id` bigint NOT NULL AUTO_INCREMENT,
