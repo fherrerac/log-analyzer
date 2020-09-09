@@ -57,11 +57,11 @@ public class ProcessLog {
                     String[] pathSegments = path.split("/", -1);
 
                     if (StringUtils.isEmpty(requestDatetimeStr) ||
-                            StringUtils.isEmpty(requestDatetimeTimeZoneStr) ||
-                            StringUtils.isEmpty(httpMethod) ||
-                            StringUtils.isEmpty(path) ||
-                            pathSegments.length < 4 ||
-                            StringUtils.isEmpty(path)) {
+                        StringUtils.isEmpty(requestDatetimeTimeZoneStr) ||
+                        StringUtils.isEmpty(httpMethod) ||
+                        StringUtils.isEmpty(path) ||
+                        pathSegments.length < 4 ||
+                        StringUtils.isEmpty(path)) {
                         // log error processing line and continue with next
                         continue;
                     }
@@ -70,7 +70,8 @@ public class ProcessLog {
                     Date requestDatetime = null;
                     try {
                         requestDatetime = Request.DATETIME_FORMAT.parse(requestDatetimeStr + requestDatetimeTimeZoneStr);
-                    } catch (ParseException e) {
+                    }
+                    catch (ParseException e) {
                         e.printStackTrace();
                         // log error processing line and continue with next
                         continue;
@@ -80,17 +81,21 @@ public class ProcessLog {
                     logAnalyzerDaoMySql.addRequest(request, keepDbConnection);
                 }
             }
-        } catch (FileNotFoundException e) {
+        }
+        catch (FileNotFoundException e) {
             throw new RuntimeException("Error processing log file");
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException("Error processing log file");
-        } finally {
+        }
+        finally {
             logAnalyzerDaoMySql.closeDbConnection();
 
             if (br != null) {
                 try {
                     br.close();
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     throw new RuntimeException("Error processing log file");
                 }
             }
@@ -108,23 +113,37 @@ public class ProcessLog {
         long start = System.currentTimeMillis();
         boolean keepDbConnection = true;
 
+        // get all users
         List<String> userIds = logAnalyzerDaoMySql.getUsers(keepDbConnection);
+
+        // loop over users
         for (String userId : userIds) {
             System.out.println("Processing sessions for user: " + userId);
 
+            // get all userId requests sorted by time
             List<Request> requests = logAnalyzerDaoMySql.getUserRequests(userId, keepDbConnection);
+
+            // loop over userId requests
             for (Request request : requests) {
                 Session lastUserSession = logAnalyzerDaoMySql.getLastUserSession(userId, keepDbConnection);
                 if (lastUserSession == null) {
+                    // if there is no session yet create one with duration as zero
                     Session session = new Session(userId, request.getDatetime());
                     logAnalyzerDaoMySql.addSession(session, keepDbConnection);
-                } else {
+                }
+                else {
+                    // calculate the delta with the last request
                     Long requestDelta = request.getDatetime().getTime() -
-                            (lastUserSession.getStartDatetime().getTime() + lastUserSession.getDuration());
+                                        (lastUserSession.getStartDatetime().getTime() + lastUserSession.getDuration());
                     if (requestDelta <= MAX_SESSION_DURATION) {
+                        // the last request is less than MAX_SESSION_DURATION  apart (10 minutes)
+                        // then increase session duration with delta
                         lastUserSession.setDuration(lastUserSession.getDuration() + requestDelta);
                         logAnalyzerDaoMySql.updateSession(lastUserSession, keepDbConnection);
-                    } else {
+                    }
+                    else {
+                        // the last request is more than MAX_SESSION_DURATION  apart (10 minutes)
+                        // then create a new session
                         Session session = new Session(userId, request.getDatetime());
                         logAnalyzerDaoMySql.addSession(session, keepDbConnection);
                     }

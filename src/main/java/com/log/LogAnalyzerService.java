@@ -2,7 +2,7 @@ package com.log;
 
 import java.util.List;
 
-public class LogAnalzerService {
+public class LogAnalyzerService {
     private LogAnalyzerDao logAnalyzerDaoMySql = new LogAnalyzerDaoMySql();
 
     public List<Request> getRequests() {

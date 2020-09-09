@@ -18,19 +18,20 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
         CONNECTION("jdbc:mysql://localhost/log_analyzer?serverTimezone=UTC&user=demo&password=demo"),
         GET_ALL_REQUESTS("select * from requests"),
         GET_REQUEST("select * from requests where id = ?"),
-        GET_LAST_USER_REQUEST("select * from requests where user_id = ? order by datetime asc limit 1"),
+        GET_LAST_USER_REQUEST("select * from requests where user_id = ? order by datetime desc limit 1"),
         ADD_REQUEST("insert into requests values (default, ?, ?, ?, ?)"),
         ADD_SESSION("INSERT INTO sessions VALUES (default, ?, ?, 0)"),
-        GET_LAST_USER_SESSION("SELECT * from sessions WHERE user_id = ? order by start_datetime asc limit 1"),
-        UPDATE_SESSION("UPDATE sessions SET duration = ? where user_id = ?"),
+        GET_LAST_USER_SESSION("SELECT * from sessions WHERE user_id = ? order by start_datetime desc limit 1"),
+        UPDATE_SESSION("UPDATE sessions SET duration = ? where user_id = ? and id = ?"),
         GET_USER_IDS("select distinct user_id from requests"),
         GET_USER_REQUESTS("select * from requests where user_id = ? order by datetime asc"),
         GET_UNIQUE_USERS("select distinct user_id from requests"),
         GET_TOP_USERS_WITH_JOIN(
-                "with topN as (select user_id, count(user_id) as num_pages from requests group by user_id order by num_pages desc limit ?) " +
-                        "select topN.user_id, topN.num_pages, count(id) as num_sessions, max(duration) as longest, min(duration) as shortest " +
-                        "from sessions as s right join topN on (topN.user_id=s.user_id) " +
-                        "group by topN.user_id order by topN.num_pages desc"),
+                "with topN as (select user_id, count(user_id) as num_pages from requests group by user_id order by num_pages desc limit " +
+                "?) " +
+                "select topN.user_id, topN.num_pages, count(id) as num_sessions, max(duration) as longest, min(duration) as shortest " +
+                "from sessions as s right join topN on (topN.user_id=s.user_id) " +
+                "group by topN.user_id order by topN.num_pages desc"),
         GET_TOP_USERS("select user_id, count(user_id) as num_requests from requests group by user_id order by num_requests desc limit ?"),
         GET_USER_SESSION_IDS("select id from sessions where user_id = ?"),
         GET_USER_LONGEST_SESSION("select duration from sessions where user_id = ? order by duration desc limit 1"),
@@ -69,10 +70,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 Request request = new Request(id, userId, requestDateTime, httpMethod, path);
                 requests.add(request);
             }
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
@@ -85,7 +88,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -114,10 +118,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
 
                 request = new Request(id, userId, requestDateTime, httpMethod, path);
             }
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
@@ -130,7 +136,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -159,10 +166,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
 
                 request = new Request(id, userIdFromDb, requestDateTime, httpMethod, path);
             }
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
@@ -175,7 +184,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -206,10 +216,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
             newRequestId = rs.getLong(1);
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (statement != null) {
                     statement.close();
@@ -218,7 +230,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -248,10 +261,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
             newSessionId = rs.getLong(1);
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (statement != null) {
                     statement.close();
@@ -260,7 +275,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -273,7 +289,6 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
     public Session getLastUserSession(final String userId, final boolean keepDbConnection) {
         Session session = null;
         connect();
-
 
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
@@ -290,10 +305,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
 
                 session = new Session(id, userIdFromDb, startDateTime, duration);
             }
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
@@ -306,7 +323,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -324,11 +342,14 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
             PreparedStatement preparedStatement = connect.prepareStatement(Sql.UPDATE_SESSION.statement);
             preparedStatement.setLong(1, session.getDuration());
             preparedStatement.setString(2, session.getUserId());
+            preparedStatement.setLong(3, session.getId());
             preparedStatement.executeUpdate();
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (statement != null) {
                     statement.close();
@@ -337,7 +358,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -359,10 +381,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
             while (resultSet.next()) {
                 userIds.add(resultSet.getString("user_id"));
             }
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
@@ -375,7 +399,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -407,10 +432,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 Request request = new Request(id, userIdFromDb, requestDateTime, httpMethod, path);
                 requests.add(request);
             }
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
@@ -423,7 +450,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -446,10 +474,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
             while (resultSet.next()) {
                 userIds.add(resultSet.getString("user_id"));
             }
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
@@ -462,7 +492,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -504,10 +535,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
 
                 topUsers.add(userReport);
             }
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
@@ -520,7 +553,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -560,10 +594,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
 
                 topUsers.add(userReport);
             }
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
@@ -576,7 +612,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -600,10 +637,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
             while (resultSet.next()) {
                 userSessionIds.add(resultSet.getInt("id"));
             }
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
@@ -616,7 +655,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -639,11 +679,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
             if (resultSet.next()) {
                 longestSessionDuration = resultSet.getLong("duration");
             }
-
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
@@ -656,7 +697,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -679,10 +721,12 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
             if (resultSet.next()) {
                 shortestSessionDuration = resultSet.getLong("duration");
             }
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             // LOGGER e
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
@@ -695,7 +739,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 if (!keepDbConnection) {
                     closeDbConnection();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // LOGGER e
                 e.printStackTrace();
             }
@@ -710,7 +755,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
                 connect.close();
             }
             connect = null;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // LOGGER e
             e.printStackTrace();
         }
@@ -720,7 +766,8 @@ public class LogAnalyzerDaoMySql implements LogAnalyzerDao {
         if (connect == null) {
             try {
                 connect = DriverManager.getConnection(Sql.CONNECTION.statement);
-            } catch (SQLException e) {
+            }
+            catch (SQLException e) {
                 e.printStackTrace();
             }
         }
